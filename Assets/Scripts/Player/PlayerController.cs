@@ -43,6 +43,8 @@ public class PlayerController : MonoBehaviour
     float currentStamina;
     bool isOutOfStamina;
 
+    Vector3 externalMovement; // this movement is coming from moving Obsticals
+
     // ===================== Respawning =========================
     public bool IsRespawning => isRespawning;
 
@@ -121,7 +123,17 @@ public class PlayerController : MonoBehaviour
 
         requiredMoveDir = cameraController.PlanarRotation * moveInput;
 
-        characterController.Move(velocity * Time.deltaTime);
+        //characterController.Move(velocity * Time.deltaTime);
+
+        //====================================== Newly Added for moving Obsticals=======================
+        // Combine player movement + platform movement
+        Vector3 finalMove = velocity + externalMovement;
+
+        // Move player once (VERY IMPORTANT)
+        characterController.Move(finalMove * Time.deltaTime);
+
+        // Reset after applying (so it doesn't stack infinitely)
+        externalMovement = Vector3.zero;
 
         if (moveAmount > 0 && moveDir.magnitude > 0.1f)
         {
@@ -275,8 +287,14 @@ public class PlayerController : MonoBehaviour
         // Disable CharacterController before teleport (VERY IMPORTANT)
         characterController.enabled = false;
 
-        // Move to checkpoint
+        // Move player to checkpoint
         transform.position = RespawnManager.instance.GetCheckpoint() + Vector3.up * 1.5f;
+
+        // RESETING CAMERA PROPERLY AFTER RESPAWN
+        if (cameraController != null)
+        {
+            cameraController.ResetToDefaultInstant();
+        }
 
         // Enable CharacterController back
         characterController.enabled = true;
@@ -298,7 +316,7 @@ public class PlayerController : MonoBehaviour
     //===================================== Stamina Logic =============================================
     void HandleStamina()
     {
-        // Player moving condition (adjusted for your system)
+        // Player moving condition
         bool isMoving = moveDir.magnitude > 0.1f && isGrounded && !inAction && !playerHanging;
 
         if (isMoving)
@@ -316,7 +334,7 @@ public class PlayerController : MonoBehaviour
 
             UI_Canvas.instance.ShowLevelFail();
 
-            Debug.Log("Stamina Empty → Level Failed");
+            Debug.Log("Level Failed");
         }
 
         // Reset flag if stamina is above 0
@@ -326,11 +344,17 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    //================================ To chack Healing system =======================
+    //================================ To check Healing system =======================
     public void HealStamina(float amount)
     {
         currentStamina += amount * Time.deltaTime;
         currentStamina = Mathf.Clamp(currentStamina, 0f, maxStamina);
+    }
+
+    //===================================Moving Obtical helps to move Player===========================
+    public void AddExternalMovement(Vector3 movement)
+    {
+        externalMovement += movement;
     }
 
     public float StaminaNormalized => currentStamina / maxStamina;
