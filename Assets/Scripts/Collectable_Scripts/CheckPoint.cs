@@ -14,4 +14,5 @@ public class CheckPoint : MonoBehaviour
     {
         gameObject.SetActive(false); // hide when collected
     }
+
 }

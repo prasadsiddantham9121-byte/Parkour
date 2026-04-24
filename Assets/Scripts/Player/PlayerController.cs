@@ -48,6 +48,14 @@ public class PlayerController : MonoBehaviour
     // ===================== Respawning =========================
     public bool IsRespawning => isRespawning;
 
+    //====================== Falling Anim ========================
+    [Header("Falling System")]
+    [SerializeField] private string fallTriggerTag = "FallTrigger";
+    [SerializeField] private string fallStateName = "FreeFall";
+    [SerializeField] private float fallCrossFadeTime = 0.15f;
+
+    private bool isFalling = false;
+
     private void Awake()
     {
         currentStamina = maxStamina;
@@ -123,17 +131,9 @@ public class PlayerController : MonoBehaviour
 
         requiredMoveDir = cameraController.PlanarRotation * moveInput;
 
-        //characterController.Move(velocity * Time.deltaTime);
+        characterController.Move(velocity * Time.deltaTime);
 
-        //====================================== Newly Added for moving Obsticals=======================
-        // Combine player movement + platform movement
-        Vector3 finalMove = velocity + externalMovement;
-
-        // Move player once (VERY IMPORTANT)
-        characterController.Move(finalMove * Time.deltaTime);
-
-        // Reset after applying (so it doesn't stack infinitely)
-        externalMovement = Vector3.zero;
+       
 
         if (moveAmount > 0 && moveDir.magnitude > 0.1f)
         {
@@ -310,6 +310,8 @@ public class PlayerController : MonoBehaviour
         // If you're using checkpoint visuals
         RespawnManager.instance.HandleCheckpointOnRespawn();
 
+        isFalling = false;
+
         isRespawning = false;
     }
 
@@ -355,6 +357,26 @@ public class PlayerController : MonoBehaviour
     public void AddExternalMovement(Vector3 movement)
     {
         externalMovement += movement;
+    }
+
+    // ================================ Fall anim===================================
+    void StartFall()
+    {
+        if (isFalling || isRespawning) return;
+
+        isFalling = true;
+
+        // Play falling animation from ANY state
+        animator.CrossFade(fallStateName, fallCrossFadeTime, 0);
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        // Stage 1: Fall Trigger → play animation
+        if (other.CompareTag(fallTriggerTag))
+        {
+            StartFall();
+        }
     }
 
     public float StaminaNormalized => currentStamina / maxStamina;
