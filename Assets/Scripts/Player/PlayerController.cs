@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -276,7 +276,18 @@ public class PlayerController : MonoBehaviour
         characterController.enabled = false;
 
         // Move to checkpoint
-        transform.position = RespawnManager.instance.GetCheckpoint() + Vector3.up * 1.5f;
+        //transform.position = RespawnManager.instance.GetCheckpoint() + Vector3.up * 1.5f;
+
+        if (RespawnManager.instance.TryGetCheckpoint(out Vector3 checkpointPos))
+        {
+            transform.position = checkpointPos + Vector3.up * 1.5f;
+        }
+        else
+        {
+            UI_Canvas.instance.ShowLevelFail();
+            isRespawning = false;
+            yield break;
+        }
 
         // Enable CharacterController back
         characterController.enabled = true;
@@ -332,6 +343,37 @@ public class PlayerController : MonoBehaviour
         currentStamina += amount * Time.deltaTime;
         currentStamina = Mathf.Clamp(currentStamina, 0f, maxStamina);
     }
+
+    //===================================== DeathTrigger Logic =========================
+    private bool deathTriggered = false;
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (!other.CompareTag("DeathTrigger"))
+            return;
+
+        if (deathTriggered || isRespawning)
+            return;
+
+        deathTriggered = true;
+
+        if (RespawnManager.instance.CanUseCheckpoint)
+        {
+            StartCoroutine(PlayerDeathRoutine());
+        }
+        else
+        {
+            UI_Canvas.instance.ShowLevelFail();
+        }
+    }
+
+    private IEnumerator PlayerDeathRoutine()
+    {
+        yield return StartCoroutine(RespawnRoutine());
+
+        deathTriggered = false;
+    }
+
 
     public float StaminaNormalized => currentStamina / maxStamina;
 }

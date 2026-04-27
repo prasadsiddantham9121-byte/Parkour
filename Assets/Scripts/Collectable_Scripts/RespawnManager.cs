@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 public class RespawnManager : MonoBehaviour
 {
@@ -12,18 +12,20 @@ public class RespawnManager : MonoBehaviour
     private bool canRespawnFromCheckpoint = false;
     private bool checkpointAlreadyUsed = false;
 
-    // ✅ This is what DeathTrigger should check
     public bool CanUseCheckpoint => canRespawnFromCheckpoint && !checkpointAlreadyUsed;
 
     private void Awake()
     {
         instance = this;
+        Debug.Log("[RespawnManager] Instance Created");
     }
 
     private void Start()
     {
         defaultSpawnPoint = GameObject.FindGameObjectWithTag("Player").transform.position;
         currentCheckpoint = defaultSpawnPoint;
+
+        Debug.Log("[RespawnManager] Default Spawn Set To: " + defaultSpawnPoint);
     }
 
     public void SetCheckpoint(Vector3 pos, CheckPoint checkpoint)
@@ -32,24 +34,37 @@ public class RespawnManager : MonoBehaviour
         currentCheckpointObj = checkpoint;
 
         canRespawnFromCheckpoint = true;
-        checkpointAlreadyUsed = false; // ✅ reset when new checkpoint collected
+        checkpointAlreadyUsed = false;
+
+        Debug.Log("[RespawnManager] NEW CHECKPOINT SET");
+        Debug.Log("[RespawnManager] Checkpoint Position: " + currentCheckpoint);
+        Debug.Log("[RespawnManager] Checkpoint Reset / Available Again");
 
         checkpoint.ActivateCheckpoint();
     }
 
-    public Vector3 GetCheckpoint()
+    public bool TryGetCheckpoint(out Vector3 checkpointPos)
     {
+        checkpointPos = Vector3.zero;
+
         if (CanUseCheckpoint)
         {
-            checkpointAlreadyUsed = true; // ✅ consume checkpoint
-            return currentCheckpoint;
+            checkpointAlreadyUsed = true;
+            checkpointPos = currentCheckpoint;
+
+            Debug.Log("[RespawnManager] USING CHECKPOINT");
+            return true;
         }
 
-        return defaultSpawnPoint;
+        Debug.Log("[RespawnManager] No Checkpoint Available");
+        return false;
     }
+
 
     public void HandleCheckpointOnRespawn()
     {
+        Debug.Log("[RespawnManager] Clearing Current Checkpoint Reference");
+
         currentCheckpointObj = null;
     }
 }

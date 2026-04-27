@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 
 public class DeathTrigger : MonoBehaviour
@@ -7,38 +7,45 @@ public class DeathTrigger : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (hasTriggered) return;
+
+        if (hasTriggered)
+        {
+            return;
+        }
 
         if (other.CompareTag("Player"))
         {
+
             PlayerController player = other.GetComponent<PlayerController>();
 
-            if (player == null) return;
+            if (player == null)
+            {
+                return;
+            }
 
-            // 🚫 Prevent triggering while already respawning
-            if (player.IsRespawning) return;
+            if (player.IsRespawning)
+            {
+                return;
+            }
 
             hasTriggered = true;
 
             if (RespawnManager.instance.CanUseCheckpoint)
             {
-                // ✅ First death → respawn
-                player.StartCoroutine(HandleRespawn(player));
+                //player.StartCoroutine(HandleRespawn(player));
             }
             else
             {
-                // ❌ Second death → FAIL
-                Debug.Log("LEVEL FAIL");
                 UI_Canvas.instance.ShowLevelFail();
             }
         }
     }
 
-    private IEnumerator HandleRespawn(PlayerController player)
-    {
-        yield return player.StartCoroutine(player.RespawnRoutine());
+    //private IEnumerator HandleRespawn(PlayerController player)
+    //{
 
-        // ✅ Reset trigger AFTER respawn completes
-        hasTriggered = false;
-    }
+    //    yield return player.StartCoroutine(player.RespawnRoutine());
+
+    //    hasTriggered = false;
+    //}
 }
