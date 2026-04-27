@@ -8,6 +8,7 @@ TagManager:
   - Fence1
   - Fence2
   - FallTrigger
+  - DeathTrigger
   layers:
   - Default
   - TransparentFX

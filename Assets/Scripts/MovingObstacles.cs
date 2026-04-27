@@ -107,7 +107,7 @@ public class MovingObstacles : MonoBehaviour
         if (player != null)
         {
             // IMPORTANT: divide by deltaTime because PlayerController multiplies later
-            player.AddExternalMovement(delta / Time.deltaTime);
+            //player.AddExternalMovement(delta / Time.deltaTime);
         }
 
         // Update last position

@@ -3082,9 +3082,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   followTarget: {fileID: 2048645743}
-  offset: {x: 0, y: 2, z: -5}
-  followSpeed: 10
+  baseOffset: {x: 0, y: 2, z: -5}
+  followSmoothTime: 0.2
   rotationSpeed: 0.5
+  currentSide: 0
+  sideAngle: 90
+  angleSmoothSpeed: 5
 --- !u!1 &966876852
 GameObject:
   m_ObjectHideFlags: 0
@@ -6046,6 +6049,8 @@ MonoBehaviour:
     m_Bits: 520
   environmentScanner: {fileID: 0}
   requiredMoveDir: {x: 0, y: 0, z: 0}
+  maxStamina: 100
+  staminaDecreaseRate: 10
 --- !u!4 &2048645743
 Transform:
   m_ObjectHideFlags: 0

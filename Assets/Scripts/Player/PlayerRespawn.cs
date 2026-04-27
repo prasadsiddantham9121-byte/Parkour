@@ -14,9 +14,14 @@ public class PlayerRespawn : MonoBehaviour
 
     void Respawn()
     {
-        Vector3 checkpoint = RespawnManager.instance.GetCheckpoint();
+        if (!RespawnManager.instance.TryGetCheckpoint(out Vector3 checkpoint))
+        {
+            UI_Canvas.instance.ShowLevelFail();
+            return;
+        }
 
         CharacterController controller = GetComponent<CharacterController>();
+
         if (controller != null)
             controller.enabled = false;
 
@@ -25,7 +30,6 @@ public class PlayerRespawn : MonoBehaviour
         if (controller != null)
             controller.enabled = true;
 
-        // THIS IS THE IMPORTANT PART
         RespawnManager.instance.HandleCheckpointOnRespawn();
     }
 }

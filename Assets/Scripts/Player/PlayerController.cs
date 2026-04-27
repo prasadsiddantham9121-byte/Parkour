@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -43,18 +43,8 @@ public class PlayerController : MonoBehaviour
     float currentStamina;
     bool isOutOfStamina;
 
-    Vector3 externalMovement; // this movement is coming from moving Obsticals
-
     // ===================== Respawning =========================
     public bool IsRespawning => isRespawning;
-
-    //====================== Falling Anim ========================
-    [Header("Falling System")]
-    [SerializeField] private string fallTriggerTag = "FallTrigger";
-    [SerializeField] private string fallStateName = "FreeFall";
-    [SerializeField] private float fallCrossFadeTime = 0.15f;
-
-    private bool isFalling = false;
 
     private void Awake()
     {
@@ -132,8 +122,6 @@ public class PlayerController : MonoBehaviour
         requiredMoveDir = cameraController.PlanarRotation * moveInput;
 
         characterController.Move(velocity * Time.deltaTime);
-
-       
 
         if (moveAmount > 0 && moveDir.magnitude > 0.1f)
         {
@@ -287,13 +275,18 @@ public class PlayerController : MonoBehaviour
         // Disable CharacterController before teleport (VERY IMPORTANT)
         characterController.enabled = false;
 
-        // Move player to checkpoint
-        transform.position = RespawnManager.instance.GetCheckpoint() + Vector3.up * 1.5f;
+        // Move to checkpoint
+        //transform.position = RespawnManager.instance.GetCheckpoint() + Vector3.up * 1.5f;
 
-        // RESETING CAMERA PROPERLY AFTER RESPAWN
-        if (cameraController != null)
+        if (RespawnManager.instance.TryGetCheckpoint(out Vector3 checkpointPos))
         {
-            cameraController.ResetToDefaultInstant();
+            transform.position = checkpointPos + Vector3.up * 1.5f;
+        }
+        else
+        {
+            UI_Canvas.instance.ShowLevelFail();
+            isRespawning = false;
+            yield break;
         }
 
         // Enable CharacterController back
@@ -310,15 +303,13 @@ public class PlayerController : MonoBehaviour
         // If you're using checkpoint visuals
         RespawnManager.instance.HandleCheckpointOnRespawn();
 
-        isFalling = false;
-
         isRespawning = false;
     }
 
     //===================================== Stamina Logic =============================================
     void HandleStamina()
     {
-        // Player moving condition
+        // Player moving condition (adjusted for your system)
         bool isMoving = moveDir.magnitude > 0.1f && isGrounded && !inAction && !playerHanging;
 
         if (isMoving)
@@ -336,7 +327,7 @@ public class PlayerController : MonoBehaviour
 
             UI_Canvas.instance.ShowLevelFail();
 
-            Debug.Log("Level Failed");
+            Debug.Log("Stamina Empty → Level Failed");
         }
 
         // Reset flag if stamina is above 0
@@ -346,38 +337,43 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    //================================ To check Healing system =======================
+    //================================ To chack Healing system =======================
     public void HealStamina(float amount)
     {
         currentStamina += amount * Time.deltaTime;
         currentStamina = Mathf.Clamp(currentStamina, 0f, maxStamina);
     }
 
-    //===================================Moving Obtical helps to move Player===========================
-    public void AddExternalMovement(Vector3 movement)
-    {
-        externalMovement += movement;
-    }
-
-    // ================================ Fall anim===================================
-    void StartFall()
-    {
-        if (isFalling || isRespawning) return;
-
-        isFalling = true;
-
-        // Play falling animation from ANY state
-        animator.CrossFade(fallStateName, fallCrossFadeTime, 0);
-    }
+    //===================================== DeathTrigger Logic =========================
+    private bool deathTriggered = false;
 
     private void OnTriggerEnter(Collider other)
     {
-        // Stage 1: Fall Trigger → play animation
-        if (other.CompareTag(fallTriggerTag))
+        if (!other.CompareTag("DeathTrigger"))
+            return;
+
+        if (deathTriggered || isRespawning)
+            return;
+
+        deathTriggered = true;
+
+        if (RespawnManager.instance.CanUseCheckpoint)
         {
-            StartFall();
+            StartCoroutine(PlayerDeathRoutine());
+        }
+        else
+        {
+            UI_Canvas.instance.ShowLevelFail();
         }
     }
+
+    private IEnumerator PlayerDeathRoutine()
+    {
+        yield return StartCoroutine(RespawnRoutine());
+
+        deathTriggered = false;
+    }
+
 
     public float StaminaNormalized => currentStamina / maxStamina;
 }
