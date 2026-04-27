@@ -5,6 +5,11 @@ ModelImporter:
   internalIDToNameTable: []
   externalObjects:
   - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: BarricadeA
+    second: {fileID: 2100000, guid: 17f38b5956c43434696f87ebb9a555bb, type: 2}
+  - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: 1d4c315f477c41a7b82981475d16759d_RGB_T_BarricadeB_C
